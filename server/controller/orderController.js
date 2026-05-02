@@ -132,51 +132,64 @@ const bookTicket = async (req, res) => {
 }
 
 const cancelTicket = async (req, res) => {
+    const ticketId = req.params.tid;
 
-    const userId = req.user._id
-
-    // find ticket 
-    const ticketId = req.params.tid
-
-    //Find User
-    const user = await User.findById(userId)
-
-    let ticket = await Order.findById(ticketId)
+    const ticket = await Order.findById(ticketId);
 
     if (!ticket) {
-        res.status(404)
-        throw new Error('Ticket Not Found')
+        res.status(404);
+        throw new Error("Ticket Not Found");
     }
 
     if (ticket.status === "cancelled") {
-        res.status(400)
-        throw new Error("Ticket Already Cancelled")
+        res.status(400);
+        throw new Error("Ticket Already Cancelled");
     }
 
-    // find event
-    const event = await Event.findById(ticket.event)
+    // 🔐 Authorization check
+    if (
+        ticket.user.toString() !== req.user._id.toString() &&
+        req.user.role !== "admin"
+    ) {
+        res.status(403);
+        throw new Error("Not authorized to cancel this ticket");
+    }
 
-    // check ticket status
     if (ticket.status === "expired") {
-        res.status(409)
-        throw new Error('Ticket Already Expired')
+        res.status(409);
+        throw new Error("Ticket Already Expired");
     }
 
-    // Increase Available Seats
-    let updatedSeats = event.totalSeats + ticket.seats
-    await Event.findByIdAndUpdate(event._id, { totalSeats: updatedSeats }, { new: true })
+    const event = await Event.findById(ticket.event);
 
-    // //Decrease Credits
-    await User.findByIdAndUpdate(userId, { credits: user.credits + ticket.billedAmount }, { new: true })
-
-    const updatedTicket = await Order.findByIdAndUpdate(ticket._id, { status: "cancelled" }, { new: true })
-
-    if (!updatedTicket) {
-        res.status(409)
-        throw new Error("Ticket Not Cancelled")
+    if (!event) {
+        res.status(404);
+        throw new Error("Event Not Found");
     }
-    res.status(200).json(updatedTicket)
-}
+
+    // Increase seats
+    await Event.findByIdAndUpdate(event._id, {
+        totalSeats: event.totalSeats + ticket.seats,
+    });
+
+    // Refund to correct user
+    const ticketOwner = await User.findById(ticket.user);
+
+    await User.findByIdAndUpdate(ticket.user, {
+        credits: ticketOwner.credits + ticket.billedAmount,
+    });
+
+    // Update ticket status
+    const updatedTicket = await Order.findByIdAndUpdate(
+        ticket._id,
+        { status: "cancelled" },
+        { new: true }
+    );
+
+    res.status(200).json(updatedTicket);
+};
+
+
 const applyCoupon = async (req, res) => {
     const { couponCode } = req.body
     if (!couponCode) {
