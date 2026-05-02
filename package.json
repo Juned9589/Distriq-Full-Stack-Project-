@@ -8,10 +8,10 @@
   "main": "index.js",
   "scripts": {
     "server": "nodemon server/server.js",
-    "client": "cd client && npm run dev",
-    "build": "cd client && npm install && npm run build",
+    "client": "vite",
+    "build": "npm install && vite build",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "start": "node server.js"
+    "start": "node server/server.js"
   },
   "dependencies": {
     "@google/genai": "^1.44.0",
