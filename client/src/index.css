@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+
+@layer components {
+    .input {
+        @apply w-full p-2 rounded bg-zinc-800 text-white outline-none;
+    }
+}
+
+
+::selection {
+    color: black;
+    background: yellow;
+}
