@@ -39,6 +39,22 @@ export default function AdminUsers() {
     }
   }
 
+  // const handleCreditSave = async () => {
+  //   const amount = parseInt(creditInput)
+  //   if (!creditInput || isNaN(amount)) {
+  //     toast.error('Enter a valid number (e.g. 500 or -200)', { theme: 'dark' })
+  //     return
+  //   }
+  //   try {
+  //     await dispatch(updateUserAdmin({ id: editUser._id, userData: { credits: amount } })).unwrap()
+  //     toast.success(`Credits updated for ${editUser.name}`, { theme: 'dark' })
+  //     setEditUser(null)
+  //     setCreditInput('')
+  //   } catch (err) {
+  //     toast.error(err || 'Failed to update credits', { theme: 'dark' })
+  //   }
+  // }
+
   const handleCreditSave = async () => {
     const amount = parseInt(creditInput)
     if (!creditInput || isNaN(amount)) {
@@ -46,10 +62,18 @@ export default function AdminUsers() {
       return
     }
     try {
-      await dispatch(updateUserAdmin({ id: editUser._id, userData: { credits: amount } })).unwrap()
+      await dispatch(updateUserAdmin({
+        id: editUser._id,
+        userData: { credits: amount }
+      })).unwrap()
+
       toast.success(`Credits updated for ${editUser.name}`, { theme: 'dark' })
       setEditUser(null)
       setCreditInput('')
+
+      //  Re-fetch users to sync UI with server state
+      dispatch(getAllUsers())
+
     } catch (err) {
       toast.error(err || 'Failed to update credits', { theme: 'dark' })
     }

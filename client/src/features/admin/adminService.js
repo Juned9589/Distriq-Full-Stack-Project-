@@ -1,6 +1,9 @@
 import axios from "axios"
 
-const API_URL = '/api/admin'
+// const API_URL = '/api/admin'
+
+const BASE_URL = import.meta.env.VITE_API_URL || ''
+const API_URL = `${BASE_URL}/api/admin`
 
 const fetchAllUsers = async (token) => {
     console.log(token)
