@@ -9,4 +9,4 @@ router.get("/:eid", commentController.getComments)
 
 router.post("/add/:eid", protect.forUser, commentController.addComment)
 
-export default router
+export default router                                                                                                                           
