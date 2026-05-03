@@ -339,7 +339,7 @@ export const updateUserAdmin = createAsyncThunk(
     "admin/updateUser",
     async ({ id, userData }, thunkAPI) => {
         try {
-            const token = thunkAPI.getState().auth.user.token;
+            const token = thunkAPI?.getState()?.auth?.user?.token;
             return await adminService.updateUser(id, userData, token);
         } catch (error) {
             let message = error.response?.data?.message || error.message;
