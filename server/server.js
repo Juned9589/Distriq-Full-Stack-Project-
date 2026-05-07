@@ -91,7 +91,7 @@ if (process.env.NODE_ENV === "production") {
     app.use(express.static(buildPath))
 
     // Serve index.html for any other requests to handle React Router paths
-    app.get('*', (req, res) => {
+    app.get('(.*)', (req, res) => {
         res.sendFile(path.join(buildPath, 'index.html'), (err) => {
             if (err) {
                 res.status(500).send("build file index.html not found. Ensure you ran 'npm run build' in the client ")
