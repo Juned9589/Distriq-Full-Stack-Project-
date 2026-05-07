@@ -35,6 +35,7 @@ const createEvent = async (req, res) => {
         eventLocation,
         eventArtistName,
         totalSeats,
+        availableSeats: totalSeats,
         duration,
         ticketPrice,
         eventImage: uploadResult.secure_url

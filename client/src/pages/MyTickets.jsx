@@ -24,11 +24,10 @@ export default function MyTickets() {
   useEffect(() => {
     if (!user) {
       navigate("/login")
+      return
     }
     dispatch(getTickets())
-
-
-  }, [user])
+  }, [dispatch]) // ✅ Fixed potential infinite loop: removed 'user' from dependency array
 
   useEffect(() => {
 

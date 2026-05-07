@@ -9,7 +9,7 @@ export default defineConfig({
   ],
 
   build: {
-    outDir: 'dist',  // ✅ Render will serve from here
+    outDir: 'dist',  //  Render will serve from here
   },
   server: {
     proxy: {

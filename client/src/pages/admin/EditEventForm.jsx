@@ -9,11 +9,11 @@ const getImageUrl = (imagePath) => {
   if (imagePath.startsWith('blob:')) return imagePath;
   if (imagePath.startsWith('http')) return imagePath;
 
-  const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
-
-  if (imagePath.startsWith('/uploads')) return `${BASE_URL}${imagePath}`;
-  if (imagePath.startsWith('uploads')) return `${BASE_URL}/${imagePath}`;
-  return `${BASE_URL}/uploads/${imagePath}`;
+  // In production (Render), we serve from the same domain, so relative paths work.
+  // In development, Vite proxies /uploads to the backend.
+  if (imagePath.startsWith('/uploads')) return imagePath;
+  if (imagePath.startsWith('uploads')) return `/${imagePath}`;
+  return `/uploads/${imagePath}`;
 };
 
 export default function EditEventForm({ onCancel }) {

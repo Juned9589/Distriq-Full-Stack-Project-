@@ -79,6 +79,29 @@ const authSlice = createSlice({
                     localStorage.setItem('user', JSON.stringify(state.user))
                 }
             })
+            .addCase(getMe.pending, (state) => {
+                state.isLoading = true
+            })
+            .addCase(getMe.fulfilled, (state, action) => {
+                state.isLoading = false
+                state.user = action.payload
+            })
+            .addCase(getMe.rejected, (state, action) => {
+                state.isLoading = false
+            })
+            // Global matcher for unauthorized errors across any thunk
+            .addMatcher(
+                (action) => action.type.endsWith('/rejected'),
+                (state, action) => {
+                    const message = String(action.payload || action.error?.message || "").toLowerCase();
+                    if (message.includes("jwt expired") || message.includes("unauthorized access") || message.includes("no token found")) {
+                        state.user = null
+                        state.isError = true
+                        state.message = "Session expired. Please login again."
+                        localStorage.removeItem('user')
+                    }
+                }
+            )
     }
 })
 
@@ -100,6 +123,17 @@ export const registerUser = createAsyncThunk("AUTH/REGISTER", async (formData, t
 export const loginUser = createAsyncThunk("AUTH/LOGIN", async (formData, thunkAPI) => {
     try {
         return await authService.login(formData)
+    } catch (error) {
+        let message = error.response.data.message
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
+// Get Latest User Data
+export const getMe = createAsyncThunk("AUTH/GET_ME", async (_, thunkAPI) => {
+    try {
+        const token = thunkAPI.getState().auth.user.token
+        return await authService.getMe(token)
     } catch (error) {
         let message = error.response.data.message
         return thunkAPI.rejectWithValue(message)

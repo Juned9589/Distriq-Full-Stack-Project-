@@ -43,7 +43,7 @@ export default function EventDetail() {
     ? event.comments.filter(c => c?.event?._id === event._id || c?.event === event._id)
     : []
 
-  const seatsLeft = Math.floor((event?.totalSeats || 0) * 0.3)
+  const seatsLeft = event?.availableSeats || 0
 
   return (
     <motion.div
@@ -189,7 +189,7 @@ export default function EventDetail() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-zinc-400">Available Seats</span>
-                  <span className="font-medium text-[#C8F135]">{seatsLeft} left</span>
+                  <span className={`font-medium ${seatsLeft < 10 ? 'text-red-500' : 'text-[#C8F135]'}`}>{seatsLeft} left</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-zinc-400">Status</span>

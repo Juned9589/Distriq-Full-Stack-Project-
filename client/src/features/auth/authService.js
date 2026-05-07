@@ -15,6 +15,20 @@ const login = async (formData) => {
     return response.data
 }
 
-const authService = { register, login }
+const getMe = async (token) => {
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    }
+    const response = await axios.get(API_URL + "/me", config)
+    // Update localStorage with latest data if needed, but keep the token
+    const oldUser = JSON.parse(localStorage.getItem('user'))
+    const updatedUser = { ...oldUser, ...response.data }
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+    return updatedUser
+}
+
+const authService = { register, login, getMe }
 
 export default authService

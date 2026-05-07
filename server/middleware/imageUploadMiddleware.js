@@ -3,8 +3,13 @@ import crypto from 'crypto'
 import path from 'path'
 import fs from 'fs'
 
-// Ensure uploads directory exists
-const uploadDir = 'uploads/'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Ensure uploads directory exists (in project root)
+const uploadDir = path.resolve(__dirname, '../../uploads')
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true })
 }

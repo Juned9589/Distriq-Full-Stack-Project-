@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import { getSingleEvent } from '../features/event/eventSlice.js'
+import { getMe } from '../features/auth/authSlice.js'
 import LoadingScreen from '../components/LoadingScreen'
 import { applyCoupon, bookTicket } from '../features/orders/orderSlice.js'
 import BookingConfirmation from './BookingConfimation.jsx'
@@ -25,6 +26,9 @@ export default function BookTicket() {
   useEffect(() => {
     if (eid) {
       dispatch(getSingleEvent(eid))
+    }
+    if (user && user.token) {
+      dispatch(getMe())
     }
   }, [eid, dispatch])
 

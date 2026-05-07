@@ -155,25 +155,35 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowLeft, Shield, Download, MapPin, Calendar, Clock, Users } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 export default function BookingConfirmation() {
 
     const { eid } = useParams();
+    const location = useLocation();
+    const { ticketCount = 1, coupon: stateCoupon } = location.state || {};
 
     const { event } = useSelector(state => state.event);
-    const { coupon } = useSelector(state => state.order);
+    const { coupon: reduxCoupon } = useSelector(state => state.order);
+    
+    // Use state coupon if available, fallback to redux
+    const activeCoupon = stateCoupon || reduxCoupon;
 
     const events = event && event._id === eid ? event : null;
 
     if (!events) {
-        return <p className="text-white text-center mt-10">No booking found</p>;
+        return <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+            <div className="text-center">
+                <p className="text-white text-xl mb-4">No booking details found</p>
+                <Link to="/events" className="text-[#C8F135] hover:underline">Go back to events</Link>
+            </div>
+        </div>;
     }
 
-    const seats = 1;
+    const seats = ticketCount;
     const subtotal = (events.ticketPrice || 0) * seats;
-    const discountRate = coupon?.couponDiscount || 0;
+    const discountRate = activeCoupon?.couponDiscount || 0;
     const discount = Math.round((subtotal * discountRate) / 100);
     const total = subtotal - discount;
 
@@ -254,7 +264,7 @@ export default function BookingConfirmation() {
                     {[
                         { label: `Ticket Price (×${seats})`, val: `₹${subtotal.toLocaleString()}` },
                         ...(discount > 0 ? [{
-                            label: `Coupon — ${coupon?.couponCode || "APPLIED"}`,
+                            label: `Coupon — ${activeCoupon?.couponCode || "APPLIED"}`,
                             val: `− ₹${discount.toLocaleString()}`,
                             green: true
                         }] : []),

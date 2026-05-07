@@ -32,14 +32,34 @@ const __dirname = path.dirname(__filename);
 
 // init app
 const app = express();
-//CORS
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://localhost:5176",
+    "http://localhost:3000"
+].filter(Boolean);
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.error("CORS Blocked Origin:", origin);
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true
 }));
 
 // DB connection
 connectDB();
+
+if (!process.env.JWT_SECRET) {
+    console.error("FATAL ERROR: JWT_SECRET is not defined.".bgRed.white);
+    process.exit(1);
+}
 
 // ================= MIDDLEWARE =================
 app.use(express.json());
@@ -70,11 +90,10 @@ if (process.env.NODE_ENV === "production") {
     //Serve static files fro the build directory
     app.use(express.static(buildPath))
 
-    //express v5 required a named parameter for wildcard (/*splat)
-    app.get('./*splat', (req, res) => {
+    // Serve index.html for any other requests to handle React Router paths
+    app.get('*', (req, res) => {
         res.sendFile(path.join(buildPath, 'index.html'), (err) => {
             if (err) {
-                //If index.html is missing , this provides a clearer error
                 res.status(500).send("build file index.html not found. Ensure you ran 'npm run build' in the client ")
             }
         })

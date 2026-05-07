@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Ticket, Menu, X } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
-import { logoutUser } from '../features/auth/authSlice'
+import { logoutUser, getMe } from '../features/auth/authSlice'
+import { Coins } from 'lucide-react'
 
 
 const navLinks = [
@@ -35,6 +36,12 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (user && user.token) {
+      dispatch(getMe())
+    }
+  }, [dispatch])
 
   // ✅ Early return AFTER all hooks
   if (location.pathname.startsWith('/admin')) return null
@@ -80,11 +87,16 @@ export default function Navbar() {
               <Ticket className="h-5 w-5" />
             </Link>
 
-            <Link to={"/profile"}>
+            <Link to={"/profile"} className="flex items-center gap-3">
               {user && (
-                <span className="text-sm font-medium text-white">{user?.name || ''}</span>
+                <>
+                  <div className="flex items-center gap-1.5 rounded-full bg-[#C8F135]/10 px-3 py-1 text-xs font-bold text-[#C8F135]">
+                    <Coins className="h-3.5 w-3.5" />
+                    ₹{user?.credits?.toLocaleString('en-IN') || 0}
+                  </div>
+                  <span className="text-sm font-medium text-white">{user?.name || ''}</span>
+                </>
               )}
-
             </Link>
 
             {user ? (

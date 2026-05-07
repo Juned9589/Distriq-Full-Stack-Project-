@@ -33,7 +33,11 @@ const eventSchema = new mongoose.Schema({
     },
     totalSeats: {
         type: Number,
-        required: [true, "Please Enter Event Seats"]
+        required: [true, "Please Enter Event Total Capacity"]
+    },
+    availableSeats: {
+        type: Number,
+        required: true
     },
     duration: {
         type: String,
@@ -64,4 +68,3 @@ const Event = mongoose.model("Event", eventSchema)
 
 
 export default Event
-

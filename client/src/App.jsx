@@ -17,7 +17,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
-import BookingConfirmation from './pages/BookingConfimation'
+import BookingConfirmation from './pages/BookingConfirmation'
 import AiChat from './pages/AiChat'
 
 import AdminLayout from './pages/admin/AdminLayout'

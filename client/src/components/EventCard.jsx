@@ -6,7 +6,9 @@ export default function EventCard({ event, index = 0 }) {
 
   if (!event) return null
 
-  const seatsLeft = Math.floor((event?.totalSeats || 0) * 0.3)
+  const seatsLeft = event?.availableSeats || 0
+  const totalSeats = event?.totalSeats || 1
+  const percentage = Math.min(100, Math.round((seatsLeft / totalSeats) * 100))
 
   const statusColors = {
     upcoming: 'bg-[#C8F135] text-zinc-950',
@@ -72,7 +74,7 @@ export default function EventCard({ event, index = 0 }) {
               <span>{event.totalSeats || 0} total</span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-700/50">
-              <div className="h-full w-[30%] rounded-full bg-[#C8F135]" role="progressbar" />
+              <div className="h-full rounded-full bg-[#C8F135]" style={{ width: `${percentage}%` }} role="progressbar" />
             </div>
           </div>
 

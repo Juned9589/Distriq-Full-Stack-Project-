@@ -18,7 +18,7 @@ router.get("/orders", protect.forAdmin, adminController.getAllOrders)
 router.get("/comments", protect.forAdmin, adminController.getAllComments)
 
 
-router.put("/events/:uid", protect.forAdmin, upload.single("eventImage"), adminController.updateEvent)
+router.put("/events/:eid", protect.forAdmin, upload.single("eventImage"), adminController.updateEvent)
 
 router.post("/coupons", protect.forAdmin, adminController.createCoupon)
 

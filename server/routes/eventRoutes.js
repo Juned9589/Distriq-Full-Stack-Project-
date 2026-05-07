@@ -6,10 +6,9 @@ import orderController from '../controller/orderController.js'
 
 const router = express.Router()
 
-router.post("/", protect.forUser, protect.forAdmin, upload.single('eventImage'), eventController.createEvent)
+router.post("/", protect.forAdmin, upload.single('eventImage'), eventController.createEvent)
 router.get("/", eventController.getEvents)
 router.get("/:eid", eventController.getEvent)
-router.get("/apply-coupons", orderController.applyCoupon)
 
 
 

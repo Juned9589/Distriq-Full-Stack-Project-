@@ -8,11 +8,7 @@ import uploadToCloudinary from '../utils/uploadToCloudinary.js'
 
 const getAllUsers = async (req, res) => {
     const users = await User.find()
-    if (users.length === 0) {
-        res.status(404)
-        throw new Error('Users Not Found')
-    }
-    res.status(200).json(users)
+    res.status(200).json(users || [])
 }
 
 const updateUser = async (req, res) => {
@@ -27,11 +23,13 @@ const updateUser = async (req, res) => {
 
     const updateData = {}
     if (isActive !== undefined) updateData.isActive = isActive
+    
+    let query = { $set: updateData }
     if (credits !== undefined && credits !== '') {
-        updateData.credits = user.credits + parseInt(credits)
+        query.$inc = { credits: parseInt(credits) }
     }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true })
+    const updatedUser = await User.findByIdAndUpdate(userId, query, { new: true })
 
     if (!updatedUser) {
         res.status(409)
@@ -108,12 +106,20 @@ const updateCoupons = async (req, res) => {
 }
 
 const updateEvent = async (req, res) => {
-    const eventId = req.params.uid
+    const eventId = req.params.eid
     const updateData = { ...req.body }
 
     // Handle isActive string → boolean (FormData sends strings)
     if (updateData.isActive !== undefined) {
         updateData.isActive = updateData.isActive === 'true' || updateData.isActive === true
+    }
+
+    if (updateData.totalSeats !== undefined) {
+        const oldEvent = await Event.findById(eventId)
+        if (oldEvent) {
+            const diff = parseInt(updateData.totalSeats) - oldEvent.totalSeats
+            updateData.availableSeats = Math.max(0, oldEvent.availableSeats + diff)
+        }
     }
 
     if (req.file) {

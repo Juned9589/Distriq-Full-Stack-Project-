@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
 import { toast } from "react-toastify";
 import { getTickets, ticketCancel } from '../features/orders/orderSlice'
+import { getMe } from '../features/auth/authSlice'
 import LoadingScreen from '../components/LoadingScreen';
 
 const fadeUp = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } } }
@@ -21,14 +22,19 @@ export default function Profile() {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
-
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    
     if (!orderError) {
       dispatch(getTickets())
     }
-    if (!user) {
-      navigate('/login')
+    
+    if (user.token) {
+      dispatch(getMe())
     }
-  }, [user])
+  }, [dispatch]) // ✅ Fixed infinite loop: removed 'user' from dependency array
 
   const confirmCancel = async () => {
     try {

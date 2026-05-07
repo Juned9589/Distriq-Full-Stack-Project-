@@ -1,63 +1,40 @@
 import jwt from 'jsonwebtoken'
 import User from '../models/userModel.js'
 
-
+const verifyToken = async (req) => {
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        const token = req.headers.authorization.split(" ")[1]
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const user = await User.findById(decoded.id).select("-password")
+        if (!user) throw new Error("User not found")
+        return user
+    }
+    throw new Error("No Token Found")
+}
 
 const forUser = async (req, res, next) => {
-
     try {
-
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-
-            let token = req.headers.authorization.split(" ")[1]
-
-            let decoded = jwt.verify(token, process.env.JWT_SECRET)
-
-
-            let user = await User.findById(decoded.id).select("-password")
-            req.user = user
-            next()
-        } else {
-            res.status(401)
-            throw new Error("Unauthorized Access")
-        }
-
+        req.user = await verifyToken(req)
+        next()
     } catch (error) {
         res.status(401)
-        throw new Error("Unauthorized Access : No Token Found")
+        next(new Error("Unauthorized Access: " + error.message))
     }
 }
 
 const forAdmin = async (req, res, next) => {
-
     try {
-
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-
-            let token = req.headers.authorization.split(" ")[1]
-
-            let decoded = jwt.verify(token, process.env.JWT_SECRET)
-
-
-            let user = await User.findById(decoded.id).select("-password")
+        const user = await verifyToken(req)
+        if (user.isAdmin) {
             req.user = user
-
-            if (user.isAdmin) {
-                next()
-            } else {
-                throw new Error('something went terong')
-            }
-
+            next()
+        } else {
+            res.status(403)
+            next(new Error("Unauthorized Access: Admin privileges required"))
         }
-        else {
-            res.status(401)
-            throw new Error("Unauthorized Access : No Token Found : Admin Access Only ", token)
-        }
-
-
     } catch (error) {
         res.status(401)
-        throw new Error("Unauthorized Access : No Token Found")
+        next(new Error("Unauthorized Access: " + error.message))
     }
 }
 

@@ -51,8 +51,7 @@ const bookTicket = async (req, res) => {
         throw new Error("Event Not Found")
     }
     //Check If Seats Available
-
-    if (event.totalSeats < numberOfSeats || numberOfSeats > 5) {
+    if (event.availableSeats < numberOfSeats || numberOfSeats > 5) {
         res.status(409)
         throw new Error("Seats Not Available")
     }
@@ -117,10 +116,19 @@ const bookTicket = async (req, res) => {
     }
 
 
-    // Decrease Available Seats
-    let updatedSeats = event.totalSeats - numberOfSeats
-    await Event.findByIdAndUpdate(event._id, { totalSeats: updatedSeats }, { new: true })
-    // await Event.findByIdAndUpdate(event._id, { totalSeats: parseInt(event.totalSeats) - numberOfSeats }, { new: true })
+    // Decrease Available Seats Atomically
+    const updatedEvent = await Event.findOneAndUpdate(
+        { _id: eventId, availableSeats: { $gte: numberOfSeats } },
+        { $inc: { availableSeats: -numberOfSeats } },
+        { new: true }
+    )
+
+    if (!updatedEvent) {
+        // Rollback order if seats became unavailable between check and update
+        await Order.findByIdAndDelete(order._id)
+        res.status(409)
+        throw new Error("Seats became unavailable. Please try again.")
+    }
 
 
     // //Decrease Credits
@@ -167,9 +175,9 @@ const cancelTicket = async (req, res) => {
         throw new Error("Event Not Found");
     }
 
-    // Increase seats
+    // Increase available seats atomically
     await Event.findByIdAndUpdate(event._id, {
-        totalSeats: event.totalSeats + ticket.seats,
+        $inc: { availableSeats: ticket.seats },
     });
 
     // Refund to correct user
