@@ -87,21 +87,22 @@ app.post('/api/admin/chat', protect.forAdmin, giveAnswer);
 const buildPath = path.resolve(__dirname, '../client/dist')
 
 if (process.env.NODE_ENV === "production") {
-    //Serve static files fro the build directory
-    app.use(express.static(buildPath))
+    // Serve static files from the build directory
+    app.use(express.static(buildPath));
 
     // Serve index.html for any other requests to handle React Router paths
-    app.get('(.*)', (req, res) => {
+    app.get('*', (req, res) => {
         res.sendFile(path.join(buildPath, 'index.html'), (err) => {
             if (err) {
-                res.status(500).send("build file index.html not found. Ensure you ran 'npm run build' in the client ")
+                console.error("Error sending index.html:", err);
+                res.status(500).send("The frontend build (index.html) was not found. Please ensure 'npm run build' was executed in the client directory.");
             }
-        })
-    })
+        });
+    });
 } else {
     app.get("/", (req, res) => {
-        res.send("API is running... (Development Mode )")
-    })
+        res.send("API is running... (Development Mode)");
+    });
 }
 
 
