@@ -91,11 +91,11 @@ if (process.env.NODE_ENV === "production") {
     app.use(express.static(buildPath));
 
     // Serve index.html for any other requests to handle React Router paths
-    app.get('/*', (req, res) => {
+    app.use((req, res) => {
         res.sendFile(path.join(buildPath, 'index.html'), (err) => {
             if (err) {
                 console.error("Error sending index.html:", err);
-                res.status(500).send("The frontend build (index.html) was not found. Please ensure 'npm run build' was executed in the client directory.");
+                res.status(500).send("Frontend build not found.");
             }
         });
     });
