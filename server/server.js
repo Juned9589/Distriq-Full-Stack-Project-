@@ -70,6 +70,8 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // ================= ROUTES =================
 
+
+
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
@@ -82,27 +84,27 @@ app.use("/api/coupons", couponRoutes);
 app.post('/api/chat', protect.forUser, giveAnswer);
 app.post('/api/admin/chat', protect.forAdmin, giveAnswer);
 
-
-
-const buildPath = path.resolve(__dirname, "../client/dist");
+const buildPath = path.resolve(__dirname, '../client/dist')
 
 if (process.env.NODE_ENV === "production") {
-
-    // Serve frontend static files
+    // Serve static files from the build directory
     app.use(express.static(buildPath));
 
-    // React Router support
-    app.get("*", (req, res) => {
-        res.sendFile(path.join(buildPath, "index.html"));
+    // Serve index.html for any other requests to handle React Router paths
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(buildPath, 'index.html'), (err) => {
+            if (err) {
+                console.error("Error sending index.html:", err);
+                res.status(500).send("Frontend build not found. Path: " + path.join(buildPath, 'index.html'));
+            }
+        });
     });
-
 } else {
-
     app.get("/", (req, res) => {
         res.send("API is running... (Development Mode)");
     });
-
 }
+
 
 // Error handler (always last)
 app.use(errorHandler);
