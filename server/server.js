@@ -1,8 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
-import cors from "cors"
-dotenv.config(); // Load this first!
+dotenv.config(); // Must be first
 
+import cors from "cors";
 import colors from "colors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -30,30 +30,39 @@ const PORT = process.env.PORT || 8080;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// init app
-const app = express();
+// Build path (defined early so it's available everywhere)
+const buildPath = path.resolve(__dirname, "../client/dist");
+
+// ================= CORS =================
+// FIX 1: allowedOrigins was missing entirely
 const allowedOrigins = [
     process.env.CLIENT_URL,
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
     "http://localhost:5176",
-    "http://localhost:3000"
+    "http://localhost:3000",
 ].filter(Boolean);
 
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.error("CORS Blocked Origin:", origin);
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
-    credentials: true
-}));
+const corsOptions = {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-// DB connection
+// ================= APP INIT =================
+const app = express();
+
+// FIX 2: Apply CORS + preflight before anything else
+app.use(cors(corsOptions));
+app.options("/{*path}", cors(corsOptions)); // Handle preflight for all routes
+
+// ================= MIDDLEWARE =================
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+// ================= DB + ENV CHECKS =================
 connectDB();
 
 if (!process.env.JWT_SECRET) {
@@ -61,18 +70,7 @@ if (!process.env.JWT_SECRET) {
     process.exit(1);
 }
 
-// ================= MIDDLEWARE =================
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Static uploads
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
-// ================= ROUTES =================
-
-
-
-// API routes
+// ================= API ROUTES =================
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/events", eventRoutes);
@@ -80,26 +78,20 @@ app.use("/api/order", orderRoutes);
 app.use("/api/comment", commentRoutes);
 app.use("/api/coupons", couponRoutes);
 
-// Chat routes
-app.post('/api/chat', protect.forUser, giveAnswer);
-app.post('/api/admin/chat', protect.forAdmin, giveAnswer);
+app.post("/api/chat", protect.forUser, giveAnswer);
+app.post("/api/admin/chat", protect.forAdmin, giveAnswer);
 
-const buildPath = path.resolve(__dirname, '../client/dist')
-
+// ================= STATIC / CATCH-ALL =================
+// FIX 3: catch-all was placed before routes and before buildPath was defined
 if (process.env.NODE_ENV === "production") {
-    // Serve static files from the build directory
     app.use(express.static(buildPath));
 
-    // Serve index.html for any other requests to handle React Router paths
-    app.use((req, res, next) => {
-        // Do not serve index.html for API routes
-        if (req.originalUrl.startsWith('/api')) {
+    app.use("/{*path}", (req, res, next) => {
+        if (req.originalUrl.startsWith("/api")) {
             return next();
         }
-        res.sendFile(path.join(buildPath, 'index.html'), (err) => {
-            if (err) {
-                next(err);
-            }
+        res.sendFile(path.join(buildPath, "index.html"), (err) => {
+            if (err) next(err);
         });
     });
 } else {
@@ -108,8 +100,7 @@ if (process.env.NODE_ENV === "production") {
     });
 }
 
-
-// Error handler (always last)
+// ================= ERROR HANDLER =================
 app.use(errorHandler);
 
 // ================= SERVER =================
